@@ -1,5 +1,10 @@
 package priv.hy.pojo;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class Brand {
     private Integer id;
     private String brandName;
