@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--别名-->
+    <typeAliases>
+        <package name="priv.hy_01"/>
+    </typeAliases>
+    <!--可以配置多个environment,通过default切换environment-->
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <!--数据库连接信息-->
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://127.0.0.1:3306/db1?useSSL=false&amp;useServerPrepStmts=true"/>
+                <property name="username" value="root"/>
+                <property name="password" value="2494088755"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <!--Mapper代理方式-->
+        <package name="priv/hy/mapper"/>
+
+    </mappers>
+</configuration>

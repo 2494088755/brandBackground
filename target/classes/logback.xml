@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--详细介绍使用：https://icode.blog.csdn.net/article/details/88874162-->
+<!--debug="true" : 打印 logback 内部状态（默认当 logback 运行出错时才会打印内部状态 ）, 配置该属性后打印条件如下（同时满足）：
+    1、找到配置文件 2、配置文件是一个格式正确的xml文件 也可编程实现打印内部状态, 例如： LoggerContext lc = (LoggerContext)
+    LoggerFactory.getILoggerFactory(); StatusPrinter.print(lc); -->
+<!-- scan="true" ： 自动扫描该配置文件，若有修改则重新加载该配置文件 -->
+<!-- scanPeriod="30 seconds" : 配置自动扫面时间间隔（单位可以是：milliseconds, seconds, minutes
+    or hours，默认为：milliseconds）， 默认为1分钟，scan="true"时该配置才会生效 -->
+<configuration debug="true" scan="true" scanPeriod="30 seconds" packagingData="true">
+
+    <!-- 设置变量。定义变量后，可以使“${}”来使用变量。 -->
+    <!--%red(%date{yyyy-MM-dd HH:mm:ss})-->
+    <property name="LOG_FILE_LOCATION" value="./log-file" />
+    <property name="CONSOLE_LOG_PATTERN"
+              value=" %highlight(%-5level) %red([%thread]) %boldMagenta(%logger{50}) %cyan(%msg%n)"/>
+
+
+    <!-- 设置 logger context 名称,一旦设置不可改变，默认为default -->
+    <contextName>myAppName</contextName>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoder class为空时, 默认也为 ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 按照每天生成日志文件 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 当前活动日志文件名：用日期命名 -->
+        <file>${LOG_FILE_LOCATION}/MyLog%d{yyyy-MM-dd}.log</file>
+        <!-- 文件滚动策略根据%d{patter}中的“patter”而定，此处为每天产生一个文件 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 归档文件名“.zip或.gz结尾”,表示归档文件自动压缩 -->
+            <FileNamePattern>${LOG_FILE_LOCATION}/MyLog%d{yyyy-MM-dd}.log.zip</FileNamePattern>
+            <!--日志文件保留天数-->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <!--日志文件最大的大小-->
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>10MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 日志级别若没显示定义，则继承最近的父 logger（该logger需显示定义level,直到rootLogger）的日志级别-->
+    <!-- logger 的 appender 默认具有累加性（默认日志输出到当前logger的appender和所有祖先logger的appender中），可通过配置 “additivity”属性修改默认行为-->
+    <!--name: 用来指定受此 logger 约束的某一个包或者具体的某一个类-->
+    <logger name="com.xpwi"  level="debug" additivity="false" >
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- 至多只能配置一个root -->
+    <root level="debug">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>
+
+
+        <!--
+        <?xml version="1.0" encoding="UTF-8"?>
+        &lt;!&ndash;
+            logback.xml的基本配置信息都包含在configuration标签中，
+            需要含有至少一个appender标签用于指定日志输出方式和输出格式，
+            root标签为系统默认日志进程，通过level指定日志级别，
+            通过appender-ref关联前面指定顶的日志输出方式。
+         &ndash;&gt;
+        &lt;!&ndash; 定义 每隔10秒中扫描该文件 &ndash;&gt;
+        <configuration scan="true" scanPeriod="10 seconds" debug="true">
+            &lt;!&ndash;设置变量&ndash;&gt;
+            <property name="LOG_FILE_LOCATION" value="./log-file" />
+            <property name="CONSOLE_LOG_PATTERN"
+                      value="%red(%date{yyyy-MM-dd HH:mm:ss}) %highlight(%-5level) %green([%thread]) %boldMagenta(%logger{50}) %cyan(%msg%n)"/>
+
+            &lt;!&ndash;定义日志输出目录&ndash;&gt;
+            <property name="LOG_HOME" value="${catalina.home}/logs/loan"/>
+            &lt;!&ndash; 控制台输出的日志格式 &ndash;&gt;
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    &lt;!&ndash;   <pattern>[%d{yyyy-MM-dd HH:mm:ss,SSS\} %-5p] %-20c - %m%n</pattern> &ndash;&gt;
+                    <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+                    <charset>UTF-8</charset>
+                </encoder>
+            </appender>
+            &lt;!&ndash; 按照登录用户的userId产生日志 &ndash;&gt;
+            <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+                <discriminator>
+                    <Key>userId</Key>
+                    <DefaultValue>unknown</DefaultValue>
+                </discriminator>
+                <sift>
+                    <appender name="FILE-${userId}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                            <fileNamePattern>${LOG_HOME}/${userId}/${HOSTNAME}_%d{yyyyMMdd}.%i.log</fileNamePattern>
+                            &lt;!&ndash; 根据日志文件按天回滚，保存时间为30天，30天之前的都将被清理掉 &ndash;&gt;
+                            <maxHistory>7</maxHistory>
+                            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                                <maxFileSize>20MB</maxFileSize>
+                            </timeBasedFileNamingAndTriggeringPolicy>
+                        </rollingPolicy>
+                        <Append>false</Append>
+                        <encoder>
+                            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                            <charset>UTF-8</charset>
+                        </encoder>
+                    </appender>
+                </sift>
+            </appender>
+            &lt;!&ndash; 输出error log 至统一日志文件中 &ndash;&gt;
+            <appender name="ERRORAPPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${LOG_HOME}/error/${HOSTNAME}_%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+                    &lt;!&ndash; 根据日志文件按天回滚，保存时间为30天，30天之前的都将被清理掉 &ndash;&gt;
+                    <maxHistory>7</maxHistory>
+                    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>20MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                    <charset>UTF-8</charset>
+                </encoder>
+                <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                    &lt;!&ndash; 只打印ERROR日志 &ndash;&gt;
+                    <level>ERROR</level>
+                    <onMatch>ACCEPT</onMatch>
+                    <onMismatch>DENY</onMismatch>
+                </filter>
+            </appender>
+            &lt;!&ndash; 设置日志（访问日志，系统日志）输出位置以及格式 &ndash;&gt;
+            <appender name="INTERFACE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <FileNamePattern>${LOG_HOME}/interface/${HOSTNAME}_%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+                    &lt;!&ndash; 根据日志文件按天回滚，保存时间为30天，30天之前的都将被清理掉 &ndash;&gt;
+                    <maxHistory>7</maxHistory>
+                    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>20MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>[%date] [%thread] [%level] %msg%n</pattern>
+                    <charset>UTF-8</charset>
+                </encoder>
+                <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                    &lt;!&ndash; 只打印INFO日志 &ndash;&gt;
+                    <level>INFO</level>
+                    <onMatch>ACCEPT</onMatch>
+                    <onMismatch>DENY</onMismatch>
+                </filter>
+            </appender>
+            &lt;!&ndash; 输出URL访问日志 &ndash;&gt;
+            <appender name="URLLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <FileNamePattern>${LOG_HOME}/URL/${HOSTNAME}_%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+                    <maxHistory>7</maxHistory>
+                    &lt;!&ndash; 日志大小 &ndash;&gt;
+                    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>20MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>[%thread] [%date] [%level] %msg%n</pattern>
+                    <charset>UTF-8</charset>
+                </encoder>
+                <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                    &lt;!&ndash; 只打印INFO日志 &ndash;&gt;
+                    <level>INFO</level>
+                    <onMatch>ACCEPT</onMatch>
+                    <onMismatch>DENY</onMismatch>
+                </filter>
+            </appender>
+            &lt;!&ndash; access url &ndash;&gt;
+            <appender name="mq_biz_url" class="ch.qos.logback.classic.sift.SiftingAppender">
+                <discriminator>
+                    <Key>SYS_FLAG</Key>
+                    <DefaultValue>unknown</DefaultValue>
+                </discriminator>
+                <sift>
+                    <appender name="FILE-${userId}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                            <fileNamePattern>${LOG_HOME}/access/${SYS_FLAG}_%d{yyyyMMdd}.%i.log</fileNamePattern>
+                            <maxHistory>7</maxHistory>
+                            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                                <maxFileSize>20MB</maxFileSize>
+                            </timeBasedFileNamingAndTriggeringPolicy>
+                        </rollingPolicy>
+                        <Append>false</Append>
+                        <encoder>
+                            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %msg%n</pattern>
+                            <charset>UTF-8</charset>
+                        </encoder>
+                    </appender>
+                </sift>
+            </appender>
+            &lt;!&ndash; 审计URL日志 &ndash;&gt;
+            <appender name="ADUIT_URL_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${LOG_HOME}/aduit_logs/${HOSTNAME}_%d{yyyyMMdd}.%i.log</fileNamePattern>
+                    <maxHistory>7</maxHistory>
+                    &lt;!&ndash; 日志大小 &ndash;&gt;
+                    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>20MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                    <charset>UTF-8</charset>
+                </encoder>
+                <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                    &lt;!&ndash; 只打印ERROR日志 &ndash;&gt;
+                    <level>INFO</level>
+                    <onMatch>ACCEPT</onMatch>
+                    <onMismatch>DENY</onMismatch>
+                </filter>
+            </appender>
+            &lt;!&ndash; 统一日志服务器 &ndash;&gt;
+        &lt;!&ndash;     <appender name="jinke_logs_udp" class="com.papertrailapp.logback.Syslog4jAppender"> &ndash;&gt;
+        &lt;!&ndash;         <layout class="com.jk.platform.core.common.JsonLoggerPatternLayout"> &ndash;&gt;
+        &lt;!&ndash;             <pattern>{{xdcore}} [%d{yyyy-MM-dd HH:mm:ss.SSS}][%p][%X{sessionId}][%X{traceId}][%X{cip}:%X{cPort}][%X{sip}:%X{sPort}][][%X{userId}][%t|%logger{36}|%M|%X{ctime}] - %message%n</pattern> &ndash;&gt;
+        &lt;!&ndash;         </layout> &ndash;&gt;
+
+        &lt;!&ndash;         <syslogConfig class="org.productivity.java.syslog4j.impl.net.udp.UDPNetSyslogConfig"> &ndash;&gt;
+        &lt;!&ndash;             <host>192.168.1.161</host> &ndash;&gt;
+        &lt;!&ndash;             <port>514</port> &ndash;&gt;
+        &lt;!&ndash;             <ident>xdcore-108</ident> &ndash;&gt;
+
+        &lt;!&ndash;             make logger synchronous for the tests &ndash;&gt;
+        &lt;!&ndash;             <threaded>false</threaded> &ndash;&gt;
+        &lt;!&ndash;         </syslogConfig> &ndash;&gt;
+        &lt;!&ndash;         <filter class="ch.qos.logback.classic.filter.LevelFilter"> &ndash;&gt;
+        &lt;!&ndash;             <level>WARN</level> &ndash;&gt;
+        &lt;!&ndash;             <onMatch>ACCEPT</onMatch> &ndash;&gt;
+        &lt;!&ndash;             <onMismatch>DENY</onMismatch> &ndash;&gt;
+        &lt;!&ndash;         </filter> &ndash;&gt;
+        &lt;!&ndash;     </appender> &ndash;&gt;
+            &lt;!&ndash; 设置异常单独打印输出 &ndash;&gt;
+            <logger name="com.jk" additivity="true">
+                <level value="DEBUG"/>
+                <appender-ref ref="ERRORAPPENDER"/>
+            </logger>
+            <logger name="com.jk.modules.platform.sysauth.session.JedisShiroSessionRepository" additivity="false">
+                <level value="ERROR"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+                <appender-ref ref="ERRORAPPENDER"/>
+            </logger>
+
+            &lt;!&ndash; 设置过滤访问日志类路径 &ndash;&gt;
+            <logger name="com.jk.modules.platform.sysauth.interceptor.ResourceInterceptor" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="INTERFACE"/>
+            </logger>
+            &lt;!&ndash; 输出URL访问日志 &ndash;&gt;
+            <logger name="com.jk.modules.common.URLInterceptor" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="URLLOG"/>
+            </logger>
+            &lt;!&ndash; 输出MQ 消费客户端日志信息 &ndash;&gt;
+            <logger name="com.jk.modules.plaform.mq.consumer.DealInfoMsgListener" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="mq_biz_url"/>
+            </logger>
+            <logger name="com.jk.modules.platform.common.interceptor.AuditURLInterceptor" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="ADUIT_URL_APPENDER"/>
+            </logger>
+            <logger name="com.jk.modules.platform.sysauth.session" additivity="false">
+                <level value="DEBUG"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            &lt;!&ndash; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ &ndash;&gt;
+            &lt;!&ndash; ++++++++++++++++++++++++++++ 第三方应用包日志配置 +++++++++++++++++++++++++++ &ndash;&gt;
+            &lt;!&ndash; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ &ndash;&gt;
+            &lt;!&ndash; sql 的日志输出设置 &ndash;&gt;
+            <logger name="java.sql.Connection" additivity="false">
+                <level value="DEBUG"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="java.sql.Statement" additivity="false">
+                <level value="DEBUG"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="java.sql.PreparedStatement" additivity="false">
+                <level value="DEBUG"/>
+                <appender-ref ref="STDOUT"/>
+
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="com.alibaba.druid" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            &lt;!&ndash; spring的日志输入设置 &ndash;&gt;
+            <logger name="org.springframework" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.mybatis.spring.mapper" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            &lt;!&ndash; MyBatis日志输出设置 &ndash;&gt;
+            <logger name="org.apache.ibatis" level="DEBUG" additivity="false">
+                <level value="DEBUG"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.apache.ibatis.io.ResolverUtil" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            &lt;!&ndash; zookeeper日志输出设置 &ndash;&gt;
+            <logger name="org.apache.zookeeper" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            &lt;!&ndash; dubbo日志输出设置 &ndash;&gt;
+            <logger name="com.alibaba.dubbo" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+
+            <logger name="org.apache.shiro.web.filter.mgt.DefaultFilterChainManager" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.apache.commons.beanutils.converters" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="pushlet" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            &lt;!&ndash; show parameters for hibernate sql 专为 Hibernate 定制   &ndash;&gt;
+            <logger name="org.hibernate.cfg.HbmBinder" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.hibernate.hql" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.hibernate.loader" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.hibernate.cfg" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.hibernate.persister.collection.AbstractCollectionPersister" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            <logger name="org.hibernate.persister.entity.AbstractEntityPersister" additivity="false">
+                <level value="INFO"/>
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+            </logger>
+            &lt;!&ndash;
+            <logger name="org.hibernate.type.descriptor.sql.BasicBinder"  level="INFO" additivity="false">
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="SIFT" />
+            </logger>
+            <logger name="org.hibernate.type.descriptor.sql.BasicExtractor"  level="INFO" additivity="false">
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="SIFT" />
+            </logger>
+            <logger name="org.hibernate.SQL" level="INFO" additivity="false">
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="SIFT" />
+            </logger>
+            <logger name="org.hibernate.engine.QueryParameters" level="INFO" additivity="false">
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="SIFT" />
+            </logger>
+            <logger name="org.hibernate.engine.query.HQLQueryPlan" level="INFO" additivity="false">
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="SIFT" />
+            </logger>
+            &ndash;&gt;
+            <root level="debug">
+                <appender-ref ref="STDOUT"/>
+                <appender-ref ref="SIFT"/>
+        &lt;!&ndash;         <appender-ref ref="jinke_logs_udp"/> &ndash;&gt;
+            </root>
+        </configuration>
+
+        -->

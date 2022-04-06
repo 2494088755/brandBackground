@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace:名称空间-->
+<mapper namespace="priv.hy.mapper.BrandMapper">
+    <resultMap id="brandResultMap" type="priv.hy.pojo.Brand">
+        <!--
+        id：主键字段映射
+            column：表的列名
+            property：实体类属性名
+        result：一段字段的映射
+            column：表的列名
+            property：实体类属性名
+        -->
+        <result column="brand_name" property="brandName"/>
+        <result column="company_name" property="companyName"/>
+    </resultMap>
+
+    <!--    &lt;!&ndash;修改全部字段sql&ndash;&gt;-->
+    <!--    <sql id="updateAll">-->
+    <!--        brand_name=#{brandName},-->
+    <!--        company_Name=#{companyName},-->
+    <!--        ordered=#{ordered},-->
+    <!--        description=#{description},-->
+    <!--        status=#{status}-->
+    <!--    </sql>-->
+
+    <!--修改动态字段-->
+    <!--    <update id="update">
+            update tb_brand
+            <set>
+                <choose>
+                    <when test="brandName!=null and brandName!=''">
+                        brand_name=#{brandName},
+                    </when>
+                    <when test="companyName!=null and companyName!=''">
+                        company_Name=#{companyName},
+                    </when>
+                    <when test="ordered !=null">
+                        ordered=#{ordered},
+                    </when>
+                    <when test="description!=null and description!=''">
+                        description=#{description},
+                    </when>
+                    <when test="status !=null">
+                        status=#{status}
+                    </when>
+                    <otherwise>
+                        <include refid="updateAll"/>
+                    </otherwise>
+                </choose>
+            </set>
+            where id = #{id};
+        </update>-->
+
+    <!--修改全部字段-->
+    <update id="update">
+        update tb_brand
+        set brand_name=#{brandName},
+            company_Name=#{companyName},
+            ordered=#{ordered},
+            description=#{description},
+            status=#{status}
+        where id = #{id};
+    </update>
+
+
+    <!--批量删除-->
+    <delete id="deleteByIds">
+        delete from tb_brand where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--多条件查询-->
+    <select id="selectByPageAndCondition" resultMap="brandResultMap">
+        select *
+        from tb_brand
+        <where>
+            <if test="brand.brandName!=null and brand.brandName!=''">
+                and brand_name like #{brand.brandName}
+            </if>
+            <if test="brand.companyName!=null and brand.companyName!=''">
+                and company_name like #{brand.companyName}
+            </if>
+            <if test="brand.status !=null">
+                and status =#{brand.status}
+            </if>
+        </where> limit #{begin},#{size}
+    </select>
+
+    <select id="selectTotalCountByCondition" resultType="java.lang.Integer">
+        select count(*) from tb_brand
+        <where>
+            <if test="brandName!=null and brandName!=''">
+                and brand_name like #{brandName}
+            </if>
+            <if test="companyName!=null and companyName!=''">
+                and company_name like #{companyName}
+            </if>
+            <if test="status !=null">
+                and status =#{status}
+            </if>
+        </where>
+    </select>
+
+</mapper>
