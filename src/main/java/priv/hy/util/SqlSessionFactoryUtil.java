@@ -9,6 +9,7 @@ import java.io.InputStream;
 
 public class SqlSessionFactoryUtil {
     private static SqlSessionFactory sqlSessionFactory;
+
     static {
         String resource = "mybatis-config.xml";
         InputStream inputStream = null;
